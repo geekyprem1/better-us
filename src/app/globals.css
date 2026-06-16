@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-50: #eef4ff;
+  --color-brand-100: #d9e6ff;
+  --color-brand-200: #bcd3ff;
+  --color-brand-300: #8eb6ff;
+  --color-brand-400: #598dff;
+  --color-brand-500: #3366ff;
+  --color-brand-600: #1f49f5;
+  --color-brand-700: #1837e1;
+  --color-brand-800: #1a30b6;
+  --color-brand-900: #1c2f8f;
+
+  --color-accent-400: #f97393;
+  --color-accent-500: #f4567c;
+  --color-accent-600: #e23a64;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #ffffff;
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle premium gradient backdrop used across hero/section surfaces */
+.bg-aurora {
+  background:
+    radial-gradient(60% 50% at 15% 0%, rgba(51, 102, 255, 0.10) 0%, rgba(255, 255, 255, 0) 60%),
+    radial-gradient(50% 45% at 90% 10%, rgba(244, 86, 124, 0.10) 0%, rgba(255, 255, 255, 0) 55%),
+    #ffffff;
+}
+
+.bg-soft {
+  background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s ease both;
+}
