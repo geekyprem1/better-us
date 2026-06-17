@@ -30,9 +30,10 @@ export const TIERS: Tier[] = [
     planEnv: "RAZORPAY_PLAN_PRO",
     features: [
       "Full AI Relationship Analysis",
-      "7-Day Recovery Plan",
+      "7-Day Recovery Blueprint™",
       "Downloadable PDF report",
       "Progress tracking",
+      "BetterUs Coach™ — 1 session/day",
     ],
   },
   {
@@ -47,10 +48,10 @@ export const TIERS: Tier[] = [
     planEnv: "RAZORPAY_PLAN_PREMIUM",
     features: [
       "Everything in Pro",
-      "7 / 30 / 90-Day Recovery Plans",
-      "Unlimited AI Relationship Coach",
-      "Couple Mode & compatibility report",
-      "Priority new features",
+      "7 / 30 / 90-Day Recovery Blueprints™",
+      "Priority BetterUs Coach™ — 10 sessions/day",
+      "Couple Mode™ & compatibility report",
+      "Relationship DNA™ & Recovery Potential™",
     ],
   },
   {

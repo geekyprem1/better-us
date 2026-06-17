@@ -58,3 +58,5 @@ export * from "./recovery";
 export * from "./dna";
 export { runCoupleSync, type CoupleSyncResult, type CategoryGap, type GapSeverity } from "./sync";
 export { runDrift, type DriftResult, type DimensionDrift, type Trend, type ScoreSnapshot } from "./drift";
+export { runTrends, type TrendResult, type TrendPoint, type Momentum } from "./trends";
+export { runMilestones, type Milestone } from "./milestones";

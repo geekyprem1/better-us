@@ -3,6 +3,117 @@
 
 import { RelationshipIntelligence } from "./index";
 
+// ── Coach snapshot + recovery journey + critical insights ───────
+export interface CoachSnapshot {
+  stage: string;
+  recovery: number;
+  trustRisk: string;
+  currentFocus: string;
+  nextMilestone: string;
+}
+
+export interface RecoveryJourney {
+  currentStage: string;
+  nextStage: string | null;
+  progress: number; // 0..100 toward next stage
+  recovery: number;
+  needs: { label: string; needed: number }[];
+}
+
+export interface CriticalInsight {
+  icon: string;
+  text: string;
+  severity: number;
+}
+
+// Stage ladder + approximate overall floors for the motivational journey bar.
+const LADDER = ["Collapse Risk", "At Risk", "Emotionally Distanced", "Needs Attention", "Healthy", "Thriving"];
+const FLOOR: Record<string, number> = {
+  "Collapse Risk": 0,
+  "At Risk": 40,
+  "Emotionally Distanced": 48,
+  "Needs Attention": 55,
+  Healthy: 68,
+  Thriving: 85,
+};
+
+export function coachSnapshot(intel: RelationshipIntelligence): CoachSnapshot {
+  const h = relationshipHeadline(intel);
+  const pillars = [
+    ["Trust", intel.health.trust],
+    ["Communication", intel.health.communication],
+    ["Connection", intel.health.connection],
+    ["Intimacy", intel.health.intimacy],
+  ].sort((a, b) => (a[1] as number) - (b[1] as number));
+  const weak = pillars[0];
+  const nextMilestone = `${weak[0]} Score ${Math.ceil(((weak[1] as number) + 1) / 10) * 10}+`;
+  return {
+    stage: intel.stage.stage,
+    recovery: intel.recovery.score,
+    trustRisk: intel.trustRisk.level,
+    currentFocus: h.priorityFocus,
+    nextMilestone,
+  };
+}
+
+export function recoveryJourney(intel: RelationshipIntelligence): RecoveryJourney {
+  const overall = intel.health.overall;
+  const current = intel.stage.stage;
+  const idx = LADDER.indexOf(current);
+  const nextStage = idx >= 0 && idx < LADDER.length - 1 ? LADDER[idx + 1] : null;
+
+  let progress = 100;
+  const needs: { label: string; needed: number }[] = [];
+  if (nextStage) {
+    const floor = FLOOR[current] ?? 0;
+    const target = FLOOR[nextStage] ?? 100;
+    progress = Math.max(0, Math.min(100, Math.round(((overall - floor) / (target - floor)) * 100)));
+    // The two lowest pillars are the levers to reach the next stage.
+    const pillars = [
+      ["Trust", intel.health.trust],
+      ["Communication", intel.health.communication],
+      ["Connection", intel.health.connection],
+      ["Intimacy", intel.health.intimacy],
+    ].sort((a, b) => (a[1] as number) - (b[1] as number));
+    for (const [label, score] of pillars.slice(0, 2)) {
+      const needed = Math.max(0, target - (score as number));
+      if (needed > 0) needs.push({ label: label as string, needed });
+    }
+  }
+
+  return { currentStage: current, nextStage, progress, recovery: intel.recovery.score, needs };
+}
+
+export function criticalInsights(intel: RelationshipIntelligence): CriticalInsight[] {
+  const { health, trustRisk, communication, stage } = intel;
+  const out: CriticalInsight[] = [];
+
+  const pillars = [
+    ["Trust", health.trust],
+    ["Communication", health.communication],
+    ["Connection", health.connection],
+    ["Intimacy", health.intimacy],
+  ].sort((a, b) => (a[1] as number) - (b[1] as number));
+  const weak = pillars[0];
+  out.push({
+    icon: (weak[1] as number) < 40 ? "🔥" : "⚠",
+    text: `${weak[0]} is your weakest pillar (${weak[1]}/100)`,
+    severity: 100 - (weak[1] as number),
+  });
+
+  if (trustRisk.level === "High" || trustRisk.level === "Severe") {
+    out.push({ icon: "🔥", text: `Trust Risk™ is ${trustRisk.level}`, severity: trustRisk.index });
+  }
+  if (communication.primaryFailure !== "None significant") {
+    out.push({ icon: "⚠", text: `${communication.primaryFailure} is hurting communication`, severity: communication.index });
+  }
+  if (["At Risk", "Collapse Risk", "Emotionally Distanced"].includes(stage.stage)) {
+    out.push({ icon: "🔥", text: `Relationship Stage™: ${stage.stage}`, severity: 90 });
+  }
+
+  return out.sort((a, b) => b.severity - a.severity);
+}
+
 // ── Conversion-grade headline (Phase 1) ─────────────────────────
 // Turns the engine output into the punchy, high-converting summary shown
 // at the top of the results page.
@@ -126,10 +237,13 @@ Communication Risk: ${communication.level} (type: ${communication.type}, primary
 Connection Risk: ${riskFromScore(health.connection)}
 Intimacy Risk: ${riskFromScore(health.intimacy)}
 Recovery Potential: ${recovery.band} (${recovery.score}/100)
+Repair Capacity: ${communication.repairCapacity}/100
 Primary Issue: ${primaryIssue}
 Secondary Issue: ${secondaryIssue}
 Relationship DNA: ${relationshipDna}
 Conflict Style: ${dna.conflictStyle}
+Communication Style: ${dna.communicationStyle}
+Connection Style: ${dna.connectionStyle}
 Attachment Style: ${dna.attachmentStyle}
 Recovery Path: ${recoveryPath}
 Assessment Summary: ${assessmentSummary}`;

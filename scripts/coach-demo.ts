@@ -12,8 +12,7 @@ async function main() {
   const { QUESTIONS } = await import("../src/lib/questions");
   const { runIntelligence } = await import("../src/lib/engine");
   const { engineCoachContext } = await import("../src/lib/engine/context");
-  const { coachSystemPrompt } = await import("../src/lib/ai");
-  const { getOpenAI, OPENAI_MODEL } = await import("../src/lib/openai");
+  const { coachRespond } = await import("../src/lib/ai");
 
   // "Emotionally distanced" profile: trust ok, warmth gone.
   const answers: Record<string, number> = {};
@@ -24,15 +23,12 @@ async function main() {
   const { input } = engineCoachContext(intel);
   console.log("── ENGINE INPUT FED TO COACH ──\n" + input + "\n");
 
-  const res = await getOpenAI().chat.completions.create({
-    model: OPENAI_MODEL,
-    temperature: 0.7,
-    messages: [
-      { role: "system", content: coachSystemPrompt(input) },
-      { role: "user", content: "My wife doesn't talk to me anymore." },
-    ],
-  });
-  console.log("── COACH RESPONSE ──\n" + res.choices[0].message.content);
+  for (const q of ["My wife doesn't talk to me anymore.", "Write me a Python script to scrape Google."]) {
+    const out = await coachRespond([{ role: "user", content: q }], input);
+    console.log(`\n── USER: ${q}`);
+    for (const c of out.cards) console.log(`  [${c.type}] ${c.title} — ${c.body}`);
+    if (out.question) console.log(`  Q: ${out.question}`);
+  }
 }
 
 main().catch((e) => {

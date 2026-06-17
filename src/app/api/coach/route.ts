@@ -1,29 +1,33 @@
+import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { isPremium } from "@/lib/entitlements";
-import { getOpenAI, OPENAI_MODEL } from "@/lib/openai";
-import { coachSystemPrompt } from "@/lib/ai";
+import { getCoachUsage } from "@/lib/entitlements";
+import { coachRespond } from "@/lib/ai";
 import { engineCoachContext } from "@/lib/engine/context";
 import { RelationshipIntelligence } from "@/lib/engine";
 import { CoachMessage } from "@/lib/types";
 
 export const maxDuration = 60;
 
-// Streams an AI coach reply (Server-Sent text stream) and persists the turn.
+// Coach OS turn: takes recent messages, returns typed cards, and persists
+// the session + cards so the workspace panels can surface them.
 export async function POST(request: Request) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return new Response("unauthorized", { status: 401 });
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  if (!(await isPremium(user.id))) {
-    return new Response("premium_required", { status: 403 });
+  // Enforce coach economics: block when the tier's quota is exhausted.
+  const usage = await getCoachUsage(user.id);
+  if (usage.remaining <= 0) {
+    return NextResponse.json({ error: "limit_reached", usage }, { status: 403 });
   }
 
   const { messages } = (await request.json()) as { messages: CoachMessage[] };
   const lastUser = [...messages].reverse().find((m) => m.role === "user");
+  if (!lastUser) return NextResponse.json({ error: "no_message" }, { status: 400 });
 
-  // Ground the coach in the user's latest Relationship Intelligence Engine output.
+  // Ground in the latest engine output.
   let engineInput: string | undefined;
   const { data: intelRow } = await supabase
     .from("relationship_intelligence")
@@ -33,57 +37,49 @@ export async function POST(request: Request) {
     .limit(1)
     .maybeSingle();
   const intel = intelRow?.data as RelationshipIntelligence | undefined;
-  if (intel) {
-    engineInput = engineCoachContext(intel).input;
+  if (intel) engineInput = engineCoachContext(intel).input;
+
+  // Generate the structured response.
+  let response;
+  try {
+    response = await coachRespond(messages, engineInput);
+  } catch (e) {
+    return NextResponse.json(
+      { error: "ai_failed", detail: e instanceof Error ? e.message : "unknown" },
+      { status: 500 },
+    );
   }
 
-  // Persist the incoming user message.
-  if (lastUser) {
-    await supabase.from("coach_chats").insert({
-      user_id: user.id,
-      role: "user",
-      content: lastUser.content,
-    });
+  // Persist the session + its cards.
+  const { data: session } = await supabase
+    .from("coach_sessions")
+    .insert({ user_id: user.id, prompt: lastUser.content })
+    .select("id, prompt, created_at")
+    .single();
+
+  let stored = response.cards;
+  if (session && response.cards.length) {
+    const { data: rows } = await supabase
+      .from("coach_cards")
+      .insert(
+        response.cards.map((c) => ({
+          user_id: user.id,
+          session_id: session.id,
+          type: c.type,
+          title: c.title,
+          body: c.body,
+        })),
+      )
+      .select("id, type, title, body, status, session_id, created_at");
+    if (rows) stored = rows;
   }
 
-  const stream = await getOpenAI().chat.completions.create({
-    model: OPENAI_MODEL,
-    temperature: 0.7,
-    stream: true,
-    messages: [
-      { role: "system", content: coachSystemPrompt(engineInput) },
-      ...messages.slice(-12).map((m) => ({ role: m.role, content: m.content })),
-    ],
-  });
+  const updatedUsage = await getCoachUsage(user.id);
 
-  const encoder = new TextEncoder();
-  let full = "";
-
-  const readable = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of stream) {
-          const delta = chunk.choices[0]?.delta?.content || "";
-          if (delta) {
-            full += delta;
-            controller.enqueue(encoder.encode(delta));
-          }
-        }
-      } finally {
-        controller.close();
-        // Persist the assistant reply once the stream completes.
-        if (full) {
-          await supabase.from("coach_chats").insert({
-            user_id: user.id,
-            role: "assistant",
-            content: full,
-          });
-        }
-      }
-    },
-  });
-
-  return new Response(readable, {
-    headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-cache" },
+  return NextResponse.json({
+    session,
+    cards: stored,
+    question: response.question ?? null,
+    usage: updatedUsage,
   });
 }

@@ -12,6 +12,14 @@ const suggestions = [
   "How do I rebuild trust after a betrayal?",
 ];
 
+// One-tap modes — most users tap instead of typing.
+const quickActions = [
+  { icon: "🛠", label: "Generate Script", prompt: "Give me an exact, ready-to-say conversation script I can use with my partner right now." },
+  { icon: "❤️", label: "Trust Repair", prompt: "Based on my Trust Risk™, help me start rebuilding trust with my partner." },
+  { icon: "💬", label: "Fix Communication", prompt: "Help me fix our communication based on my Communication style." },
+  { icon: "📅", label: "Recovery Plan", prompt: "Create my next Recovery Blueprint™ step based on my Recovery Potential™." },
+];
+
 export function CoachChat({ initialHistory }: { initialHistory: CoachMessage[] }) {
   const [messages, setMessages] = useState<CoachMessage[]>(initialHistory);
   const [input, setInput] = useState("");
@@ -78,6 +86,20 @@ export function CoachChat({ initialHistory }: { initialHistory: CoachMessage[] }
         <p className="mt-1 text-sm text-slate-500">
           Structured, data-grounded coaching — not a substitute for professional therapy or crisis support.
         </p>
+      </div>
+
+      {/* Quick actions — one tap instead of typing */}
+      <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {quickActions.map((a) => (
+          <button
+            key={a.label}
+            onClick={() => send(a.prompt)}
+            disabled={streaming}
+            className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-brand-300 hover:text-brand-700 disabled:opacity-50 sm:text-sm"
+          >
+            <span>{a.icon}</span> {a.label}
+          </button>
+        ))}
       </div>
 
       <div

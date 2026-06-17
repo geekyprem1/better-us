@@ -3,7 +3,13 @@
 // Uses least-squares linear regression on the score history to get a robust
 // slope (points per assessment), then classifies the trend.
 
-export type Trend = "Improving" | "Declining" | "Plateau" | "Insufficient Data";
+export type Trend =
+  | "Rapid Improvement"
+  | "Improving"
+  | "Plateau"
+  | "Declining"
+  | "Rapid Decline"
+  | "Insufficient Data";
 
 export interface DimensionDrift {
   dimension: string;
@@ -29,6 +35,7 @@ export interface ScoreSnapshot {
 }
 
 const SLOPE_THRESHOLD = 1.5; // points/assessment to count as real movement
+const RAPID_THRESHOLD = 5; // points/assessment = rapid movement
 
 // Least-squares slope of y over index x = 0..n-1.
 function slope(ys: number[]): number {
@@ -47,7 +54,9 @@ function slope(ys: number[]): number {
 
 function classify(s: number, n: number): Trend {
   if (n < 2) return "Insufficient Data";
+  if (s >= RAPID_THRESHOLD) return "Rapid Improvement";
   if (s >= SLOPE_THRESHOLD) return "Improving";
+  if (s <= -RAPID_THRESHOLD) return "Rapid Decline";
   if (s <= -SLOPE_THRESHOLD) return "Declining";
   return "Plateau";
 }
@@ -80,9 +89,9 @@ export function runDrift(history: ScoreSnapshot[]): DriftResult {
   const summary =
     n < 2
       ? "Take the assessment again over time to unlock trend tracking."
-      : overall.trend === "Improving"
+      : overall.trend === "Improving" || overall.trend === "Rapid Improvement"
         ? `Your relationship is trending up — overall health has moved ${overall.delta >= 0 ? "+" : ""}${overall.delta} points since you started.`
-        : overall.trend === "Declining"
+        : overall.trend === "Declining" || overall.trend === "Rapid Decline"
           ? `Heads up: overall health has slipped ${overall.delta} points. Worth addressing the declining areas now.`
           : "Your scores are holding steady. Stability is fine — but deliberate effort is what creates upward movement.";
 

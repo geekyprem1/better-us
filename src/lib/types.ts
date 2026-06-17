@@ -40,4 +40,32 @@ export interface CoachMessage {
   content: string;
 }
 
+// ── Coach OS: structured card outputs ─────────────────────
+export type CoachCardType = "insight" | "action" | "script" | "task" | "warning";
+
+export interface CoachCard {
+  type: CoachCardType;
+  title: string;
+  body: string;
+}
+
+// Persisted card (with db id + task status), used by the workspace panels.
+export interface StoredCoachCard extends CoachCard {
+  id: string;
+  session_id: string | null;
+  status: "open" | "done";
+  created_at: string;
+}
+
+export interface CoachSession {
+  id: string;
+  prompt: string;
+  created_at: string;
+}
+
+export interface CoachResponse {
+  cards: CoachCard[];
+  question?: string;
+}
+
 export type SubscriptionStatus = "free" | "active" | "cancelled" | "past_due";
