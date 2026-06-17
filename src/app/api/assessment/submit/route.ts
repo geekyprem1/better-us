@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { QUESTIONS } from "@/lib/questions";
 import { computeScores, isComplete, Answers } from "@/lib/scoring";
+import { runIntelligence } from "@/lib/engine";
 
 // Persists a completed assessment: answers + computed scores.
 // Returns the assessment id so the client can route to /results/[id].
@@ -64,6 +65,25 @@ export async function POST(request: Request) {
   if (sErr) {
     return NextResponse.json({ error: "db_scores", detail: sErr.message }, { status: 500 });
   }
+
+  // 4. Run the deterministic Relationship Intelligence Engine and store it.
+  // This is the proprietary, explainable layer — computed without the LLM.
+  const intel = runIntelligence(answers);
+  await supabase.from("relationship_intelligence").insert({
+    assessment_id: assessment.id,
+    user_id: user.id,
+    engine_version: intel.version,
+    health_overall: intel.health.overall,
+    health_band: intel.health.band,
+    trust_risk_index: intel.trustRisk.index,
+    trust_risk_level: intel.trustRisk.level,
+    communication_index: intel.communication.index,
+    communication_type: intel.communication.type,
+    relationship_stage: intel.stage.stage,
+    recovery_score: intel.recovery.score,
+    recovery_band: intel.recovery.band,
+    data: intel,
+  });
 
   return NextResponse.json({ assessmentId: assessment.id, scores });
 }

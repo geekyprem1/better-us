@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "PowerShell(node --version)",
-      "PowerShell(npm --version)"
+      "PowerShell(npm --version)",
+      "Bash(sed -i 's/RiskLevel/TrustRiskLevel/g' src/lib/engine/trust.ts)",
+      "Bash(sed -i 's/RiskLevel/CommRiskLevel/g' src/lib/engine/communication.ts)"
     ]
   }
 }

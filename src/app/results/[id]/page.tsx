@@ -7,7 +7,9 @@ import { CATEGORIES } from "@/lib/questions";
 import { OverallScore, CategoryCards } from "@/components/ScoreCards";
 import { ReportSection } from "@/components/ReportSection";
 import { UpgradeCTA } from "@/components/UpgradeCTA";
+import { IntelligencePanel } from "@/components/IntelligencePanel";
 import { AIAnalysis, RecoveryPlans } from "@/lib/types";
+import { RelationshipIntelligence } from "@/lib/engine";
 
 export default async function ResultsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -38,6 +40,13 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
     .eq("assessment_id", id)
     .maybeSingle();
 
+  const { data: intelRow } = await supabase
+    .from("relationship_intelligence")
+    .select("data")
+    .eq("assessment_id", id)
+    .maybeSingle();
+  const intel = intelRow?.data as RelationshipIntelligence | undefined;
+
   return (
     <main className="min-h-screen bg-soft">
       <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
@@ -58,6 +67,8 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
 
         <OverallScore scores={scores} />
         <CategoryCards scores={scores} />
+
+        {intel && <IntelligencePanel intel={intel} />}
 
         {premium ? (
           <ReportSection

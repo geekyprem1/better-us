@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { isPremium } from "@/lib/entitlements";
 import { getOpenAI, OPENAI_MODEL } from "@/lib/openai";
 import { coachSystemPrompt } from "@/lib/ai";
+import { engineCoachContext } from "@/lib/engine/context";
+import { RelationshipIntelligence } from "@/lib/engine";
 import { CoachMessage } from "@/lib/types";
 
 export const maxDuration = 60;
@@ -21,24 +23,18 @@ export async function POST(request: Request) {
   const { messages } = (await request.json()) as { messages: CoachMessage[] };
   const lastUser = [...messages].reverse().find((m) => m.role === "user");
 
-  // Build context from the user's most recent scores + analysis.
-  let context = "";
-  const { data: score } = await supabase
-    .from("scores")
-    .select("trust, communication, connection, intimacy, overall, assessment_id")
+  // Ground the coach in the user's latest Relationship Intelligence Engine output.
+  let engineInput: string | undefined;
+  const { data: intelRow } = await supabase
+    .from("relationship_intelligence")
+    .select("data")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (score) {
-    context = `Trust ${score.trust}, Communication ${score.communication}, Connection ${score.connection}, Intimacy ${score.intimacy}, Overall ${score.overall} (all 0-100).`;
-    const { data: report } = await supabase
-      .from("reports")
-      .select("analysis")
-      .eq("assessment_id", score.assessment_id)
-      .maybeSingle();
-    const analysis = report?.analysis as { summary?: string } | undefined;
-    if (analysis?.summary) context += `\nSummary: ${analysis.summary}`;
+  const intel = intelRow?.data as RelationshipIntelligence | undefined;
+  if (intel) {
+    engineInput = engineCoachContext(intel).input;
   }
 
   // Persist the incoming user message.
@@ -52,10 +48,10 @@ export async function POST(request: Request) {
 
   const stream = await getOpenAI().chat.completions.create({
     model: OPENAI_MODEL,
-    temperature: 0.8,
+    temperature: 0.7,
     stream: true,
     messages: [
-      { role: "system", content: coachSystemPrompt(context) },
+      { role: "system", content: coachSystemPrompt(engineInput) },
       ...messages.slice(-12).map((m) => ({ role: m.role, content: m.content })),
     ],
   });
