@@ -6,6 +6,7 @@ import { Navbar } from "@/components/Navbar";
 import { OverallScore, CategoryCards } from "@/components/ScoreCards";
 import { ProgressChart } from "@/components/ProgressChart";
 import { InviteCouple } from "@/components/InviteCouple";
+import { DriftPanel } from "@/components/DriftPanel";
 import { ScoreResult, bandFor, CategoryScore } from "@/lib/scoring";
 import { CATEGORIES } from "@/lib/questions";
 import { AIAnalysis } from "@/lib/types";
@@ -157,6 +158,16 @@ export default async function DashboardPage() {
             </Link>
           </div>
         </div>
+
+        <DriftPanel
+          history={history.map((h) => ({
+            trust: h.trust,
+            communication: h.communication,
+            connection: h.connection,
+            intimacy: h.intimacy,
+            overall: h.overall,
+          }))}
+        />
 
         {premium && <InviteCouple />}
       </div>

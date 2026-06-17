@@ -10,6 +10,9 @@ import { Paywall } from "@/components/Paywall";
 import { IntelligencePanel } from "@/components/IntelligencePanel";
 import { ResultsHeadline } from "@/components/ResultsHeadline";
 import { DownloadPdfButton } from "@/components/DownloadPdfButton";
+import { ShareCard } from "@/components/ShareCard";
+import { ExitIntentModal } from "@/components/ExitIntentModal";
+import { relationshipHeadline } from "@/lib/engine/context";
 import { AIAnalysis, RecoveryPlans } from "@/lib/types";
 import { RelationshipIntelligence } from "@/lib/engine";
 
@@ -87,7 +90,16 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
         ) : (
           <Paywall scores={scores} isLoggedIn={true} />
         )}
+
+        {intel && (() => {
+          const h = relationshipHeadline(intel);
+          return (
+            <ShareCard score={h.healthScore} status={h.status} statusColor={h.statusColor} recovery={h.recoveryLabel} />
+          );
+        })()}
       </div>
+
+      {!premium && <ExitIntentModal />}
     </main>
   );
 }

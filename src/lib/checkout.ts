@@ -72,6 +72,36 @@ export async function startCheckout(tierId: TierId, h: CheckoutHandlers) {
   }
 }
 
+// Exit-intent special: discounted lifetime (₹999 → ₹499).
+export async function startExitOfferCheckout(h: CheckoutHandlers) {
+  track(EVENTS.UPGRADE_CLICK, { tier: "lifetime", offer: "exit", price: 499 });
+  const ok = await loadRazorpay();
+  if (!ok) return h.onError("Could not load the payment SDK.");
+  try {
+    const res = await fetch("/api/razorpay/order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ offer: "exit" }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || data.error);
+
+    const rzp = new (window as any).Razorpay({
+      key: data.keyId,
+      order_id: data.orderId,
+      amount: data.amount,
+      name: "BetterUs Lifetime — Special Offer",
+      description: "Lifetime access (₹999 → ₹499)",
+      theme: { color: "#1f49f5" },
+      handler: (r: any) => verify(r, "lifetime", h),
+      modal: { ondismiss: () => h.onDismiss?.() },
+    });
+    rzp.open();
+  } catch (e) {
+    h.onError(e instanceof Error ? e.message : "Something went wrong.");
+  }
+}
+
 async function verify(r: any, tierId: TierId, h: CheckoutHandlers) {
   const res = await fetch("/api/razorpay/verify", {
     method: "POST",
