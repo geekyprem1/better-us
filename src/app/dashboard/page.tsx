@@ -5,6 +5,7 @@ import { isPremium } from "@/lib/entitlements";
 import { Navbar } from "@/components/Navbar";
 import { OverallScore, CategoryCards } from "@/components/ScoreCards";
 import { ProgressChart } from "@/components/ProgressChart";
+import { InviteCouple } from "@/components/InviteCouple";
 import { ScoreResult, bandFor, CategoryScore } from "@/lib/scoring";
 import { CATEGORIES } from "@/lib/questions";
 import { AIAnalysis } from "@/lib/types";
@@ -156,6 +157,8 @@ export default async function DashboardPage() {
             </Link>
           </div>
         </div>
+
+        {premium && <InviteCouple />}
       </div>
     </main>
   );

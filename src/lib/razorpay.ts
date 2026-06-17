@@ -30,6 +30,20 @@ export function verifySubscriptionSignature(params: {
   return expected === params.razorpay_signature;
 }
 
+// Verifies the signature for a one-time order payment (Lifetime plan).
+export function verifyOrderSignature(params: {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}): boolean {
+  const body = `${params.razorpay_order_id}|${params.razorpay_payment_id}`;
+  const expected = crypto
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
+    .update(body)
+    .digest("hex");
+  return expected === params.razorpay_signature;
+}
+
 // Verifies the X-Razorpay-Signature header on incoming webhooks.
 export function verifyWebhookSignature(rawBody: string, signature: string): boolean {
   const expected = crypto

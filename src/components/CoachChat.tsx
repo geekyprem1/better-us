@@ -73,9 +73,10 @@ export function CoachChat({ initialHistory }: { initialHistory: CoachMessage[] }
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pb-6 pt-4 sm:px-6">
       <div className="mb-4">
-        <h1 className="text-2xl font-bold text-slate-900">Your AI Coach</h1>
-        <p className="text-sm text-slate-500">
-          Warm, practical guidance — not a substitute for professional therapy or crisis support.
+        <h1 className="text-2xl font-bold text-slate-900">BetterUs Coach™</h1>
+        <p className="text-xs font-medium text-slate-400">Powered by the BetterUs Relationship Intelligence Engine™</p>
+        <p className="mt-1 text-sm text-slate-500">
+          Structured, data-grounded coaching — not a substitute for professional therapy or crisis support.
         </p>
       </div>
 

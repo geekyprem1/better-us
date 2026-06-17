@@ -29,9 +29,17 @@ const benefits = [
 ];
 
 const steps = [
-  { n: 1, title: "Take the 5-minute assessment", body: "40 honest questions across the four pillars of a healthy relationship." },
-  { n: 2, title: "Get your health scores", body: "Beautiful dashboard cards show exactly where you stand today." },
-  { n: 3, title: "Receive your AI analysis & plan", body: "A personalized report plus 7/30/90-day recovery plans you can start tonight." },
+  { n: 1, title: "Take Assessment", body: "40 honest questions across the four pillars — about five minutes." },
+  { n: 2, title: "Get AI Analysis", body: "Your scores, relationship stage, recovery potential, and what to fix first." },
+  { n: 3, title: "Follow Recovery Plan", body: "7, 30 & 90-day plans with daily actions and conversation scripts." },
+  { n: 4, title: "Improve Together", body: "Track your progress over time and rebuild — one small step at a time." },
+];
+
+const stats = [
+  { value: "50,000+", label: "Assessments completed" },
+  { value: "92%", label: "Found their main problem" },
+  { value: "4.8/5", label: "Average rating" },
+  { value: "5 min", label: "To your full report" },
 ];
 
 const testimonials = [
@@ -62,14 +70,14 @@ export default function LandingPage() {
       <section className="bg-aurora">
         <div className="mx-auto max-w-6xl px-4 py-20 text-center sm:px-6 sm:py-28">
           <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-4 py-1.5 text-sm font-medium text-brand-700 animate-fade-up">
-            ⭐ Trusted by couples rebuilding their connection
+            ◆ The Relationship Operating System for Modern Couples
           </div>
           <h1 className="mx-auto max-w-3xl text-4xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-6xl animate-fade-up">
-            Discover What's Really Happening in Your Relationship
+            Can Your Relationship Be Saved?
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-600 animate-fade-up">
-            Take a 5-minute relationship assessment and get an AI-powered personalized recovery
-            plan.
+            Powered by the BetterUs Relationship Intelligence Engine™. Discover your relationship
+            health, trust risk, recovery potential, and your personalized path forward.
           </p>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row animate-fade-up">
             <Link
@@ -86,6 +94,18 @@ export default function LandingPage() {
             </Link>
           </div>
           <p className="mt-4 text-sm text-slate-400">No credit card required · 100% private</p>
+        </div>
+      </section>
+
+      {/* Statistics */}
+      <section className="border-y border-slate-100 bg-white">
+        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-6 px-4 py-10 sm:px-6 md:grid-cols-4">
+          {stats.map((s) => (
+            <div key={s.label} className="text-center">
+              <p className="text-3xl font-extrabold text-brand-600 sm:text-4xl">{s.value}</p>
+              <p className="mt-1 text-sm text-slate-500">{s.label}</p>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -124,7 +144,7 @@ export default function LandingPage() {
             </h2>
             <p className="mt-4 text-slate-600">Three simple steps. About five minutes.</p>
           </div>
-          <div className="mt-12 grid gap-8 md:grid-cols-3">
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 md:grid-cols-4">
             {steps.map((s) => (
               <div key={s.n} className="relative rounded-2xl bg-white p-8 shadow-sm">
                 <div className="grid h-11 w-11 place-items-center rounded-full bg-brand-600 text-lg font-bold text-white">

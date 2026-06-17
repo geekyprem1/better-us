@@ -4,10 +4,12 @@ import { createClient, getOptionalUser } from "@/lib/supabase/server";
 import { isPremium } from "@/lib/entitlements";
 import { ScoreResult, bandFor, CategoryScore } from "@/lib/scoring";
 import { CATEGORIES } from "@/lib/questions";
-import { OverallScore, CategoryCards } from "@/components/ScoreCards";
+import { CategoryCards } from "@/components/ScoreCards";
 import { ReportSection } from "@/components/ReportSection";
-import { UpgradeCTA } from "@/components/UpgradeCTA";
+import { Paywall } from "@/components/Paywall";
 import { IntelligencePanel } from "@/components/IntelligencePanel";
+import { ResultsHeadline } from "@/components/ResultsHeadline";
+import { DownloadPdfButton } from "@/components/DownloadPdfButton";
 import { AIAnalysis, RecoveryPlans } from "@/lib/types";
 import { RelationshipIntelligence } from "@/lib/engine";
 
@@ -65,19 +67,25 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
           <p className="mt-2 text-slate-600">Here's where things stand today, across the four pillars.</p>
         </div>
 
-        <OverallScore scores={scores} />
+        {intel && <ResultsHeadline intel={intel} />}
+
         <CategoryCards scores={scores} />
 
         {intel && <IntelligencePanel intel={intel} />}
 
         {premium ? (
-          <ReportSection
-            assessmentId={id}
-            initialAnalysis={report?.analysis as AIAnalysis | undefined}
-            initialPlans={report?.plans as RecoveryPlans | undefined}
-          />
+          <>
+            <div className="flex justify-end">
+              <DownloadPdfButton assessmentId={id} />
+            </div>
+            <ReportSection
+              assessmentId={id}
+              initialAnalysis={report?.analysis as AIAnalysis | undefined}
+              initialPlans={report?.plans as RecoveryPlans | undefined}
+            />
+          </>
         ) : (
-          <UpgradeCTA scores={scores} />
+          <Paywall scores={scores} isLoggedIn={true} />
         )}
       </div>
     </main>

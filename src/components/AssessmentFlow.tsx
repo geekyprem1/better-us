@@ -8,7 +8,13 @@ import { track, EVENTS } from "@/lib/analytics";
 
 const STORAGE_KEY = "betterus_assessment_answers";
 
-export function AssessmentFlow() {
+export function AssessmentFlow({
+  coupleToken,
+  partnerName,
+}: {
+  coupleToken?: string;
+  partnerName?: string;
+} = {}) {
   const router = useRouter();
   const [answers, setAnswers] = useState<Answers>({});
   const [index, setIndex] = useState(0);
@@ -59,6 +65,27 @@ export function AssessmentFlow() {
   async function submit() {
     setSubmitting(true);
     setError(null);
+
+    // Couple mode: partner B submits against the invite token (no login).
+    if (coupleToken) {
+      try {
+        const res = await fetch("/api/couple/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: coupleToken, answers, partnerName }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || data.error || "Failed to submit");
+        track(EVENTS.ASSESSMENT_COMPLETE, { mode: "couple" });
+        localStorage.removeItem(STORAGE_KEY);
+        router.push(`/couple/${coupleToken}/report`);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Something went wrong.");
+        setSubmitting(false);
+      }
+      return;
+    }
+
     try {
       const res = await fetch("/api/assessment/submit", {
         method: "POST",

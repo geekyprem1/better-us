@@ -3,6 +3,83 @@
 
 import { RelationshipIntelligence } from "./index";
 
+// ── Conversion-grade headline (Phase 1) ─────────────────────────
+// Turns the engine output into the punchy, high-converting summary shown
+// at the top of the results page.
+export interface RelationshipHeadline {
+  status: string; // Strong | Healthy | Needs Attention | At Risk | Critical
+  statusColor: string;
+  healthScore: number;
+  stabilityScore: number;
+  recoveryLabel: string;
+  recoveryScore: number;
+  mainProblem: string;
+  priorityFocus: string;
+}
+
+const STATUS_FROM_BAND: Record<string, { label: string; color: string }> = {
+  thriving: { label: "Strong", color: "#10b981" },
+  healthy: { label: "Healthy", color: "#3366ff" },
+  needs_attention: { label: "Needs Attention", color: "#f59e0b" },
+  at_risk: { label: "At Risk", color: "#f97316" },
+  critical: { label: "Critical", color: "#ef4444" },
+};
+
+const PROBLEM_LABEL: Record<string, string> = {
+  Communication: "Communication Breakdown",
+  Trust: "Trust Erosion",
+  Connection: "Emotional Disconnection",
+  Intimacy: "Intimacy Decline",
+};
+
+const FOCUS_LABEL: Record<string, string> = {
+  Communication: "Communication Repair",
+  Trust: "Trust Rebuilding",
+  Connection: "Reconnection",
+  Intimacy: "Rebuilding Closeness",
+};
+
+export function relationshipHeadline(intel: RelationshipIntelligence): RelationshipHeadline {
+  const { health, trustRisk, communication, recovery } = intel;
+  const status = STATUS_FROM_BAND[health.band] ?? STATUS_FROM_BAND.needs_attention;
+
+  // Stability = how solid/steady the foundation feels right now: trust +
+  // communication minus volatility (communication risk index).
+  const stabilityScore = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(0.45 * health.trust + 0.3 * health.communication + 0.25 * (100 - communication.index)),
+    ),
+  );
+
+  // Rank dimensions by risk to name the main problem.
+  const dims = [
+    { key: "Communication", risk: communication.index },
+    { key: "Trust", risk: trustRisk.index },
+    { key: "Connection", risk: 100 - health.connection },
+    { key: "Intimacy", risk: 100 - health.intimacy },
+  ].sort((a, b) => b.risk - a.risk);
+  const topKey = dims[0].key;
+
+  // Priority focus: trust takes precedence when trust risk is high.
+  const priorityFocus =
+    trustRisk.level === "High" || trustRisk.level === "Severe"
+      ? "Trust Rebuilding"
+      : FOCUS_LABEL[topKey];
+
+  return {
+    status: status.label,
+    statusColor: status.color,
+    healthScore: health.overall,
+    stabilityScore,
+    recoveryLabel: recovery.band,
+    recoveryScore: recovery.score,
+    mainProblem: PROBLEM_LABEL[topKey],
+    priorityFocus,
+  };
+}
+
 // Risk level from a 0..100 health score (inverse of the health bands).
 function riskFromScore(score: number): string {
   if (score < 40) return "Severe";

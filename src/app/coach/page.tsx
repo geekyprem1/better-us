@@ -21,7 +21,7 @@ export default async function CoachPage() {
         <Navbar />
         <div className="mx-auto max-w-2xl px-4 py-24 text-center sm:px-6">
           <div className="text-4xl">💬</div>
-          <h1 className="mt-4 text-3xl font-bold text-slate-900">The AI Coach is a Premium feature</h1>
+          <h1 className="mt-4 text-3xl font-bold text-slate-900">BetterUs Coach™ is a Premium feature</h1>
           <p className="mt-3 text-slate-600">
             Get 24/7 supportive coaching, situation analysis, and ready-to-use communication scripts.
           </p>

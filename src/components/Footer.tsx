@@ -10,8 +10,8 @@ export function Footer() {
             Better<span className="text-brand-600">Us</span>
           </div>
           <p className="mt-3 max-w-xs text-sm text-slate-500">
-            AI-powered relationship assessment and coaching. Understand your relationship, then
-            rebuild it — one small step at a time.
+            The Relationship Operating System for modern couples. Powered by the BetterUs
+            Relationship Intelligence Engine™.
           </p>
         </div>
         <div>

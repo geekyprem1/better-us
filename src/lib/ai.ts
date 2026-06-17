@@ -128,6 +128,35 @@ export async function generateAllPlans(
   return { sevenDay, thirtyDay, ninetyDay };
 }
 
+// ── Couple Mode explanation ───────────────────────────────
+export async function generateCoupleExplanation(sync: {
+  alignmentScore: number;
+  perceptionGap: number;
+  categoryGaps: { category: string; partnerA: number; partnerB: number; gap: number; severity: string; lowerPartner: string }[];
+}): Promise<string> {
+  const gaps = sync.categoryGaps
+    .map((g) => `${g.category}: A=${g.partnerA}, B=${g.partnerB} (gap ${g.gap}, ${g.severity})`)
+    .join("; ");
+  try {
+    const completion = await getOpenAI().chat.completions.create({
+      model: OPENAI_MODEL,
+      temperature: 0.6,
+      messages: [
+        { role: "system", content: COACH_PERSONA },
+        {
+          role: "user",
+          content: `Two partners took the BetterUs assessment. Alignment ${sync.alignmentScore}/100, overall perception gap ${sync.perceptionGap}.
+Category gaps: ${gaps}.
+Write 2 short paragraphs (max 140 words) explaining what these perception gaps mean and the single most important conversation they should have. Speak to both partners as "you two". No headings.`,
+        },
+      ],
+    });
+    return completion.choices[0]?.message?.content?.trim() || "";
+  } catch {
+    return "";
+  }
+}
+
 // ── AI coach chat (streaming) ─────────────────────────────
 // BetterUs Coach™ — a structured relationship strategist powered by the
 // Relationship Intelligence Engine. Not a therapist, not ChatGPT.
@@ -146,7 +175,7 @@ You draw on the Gottman Method, Emotionally Focused Therapy (EFT), Attachment Th
 - Always provide actions. Provide exact scripts when relevant.
 - Always end with one high-value follow-up question.
 - Never overwhelm with walls of text. Max 400 words.
-- Ground your diagnosis in the engine data provided below — reference the user's actual scores, stage, risks, and DNA.
+- Ground your diagnosis in the engine data provided below. Reference the proprietary engine outputs BY NAME when relevant, e.g. "Based on your Relationship DNA™ profile and your Recovery Potential™ score, your highest-leverage step is…". Treat these as your own platform's intelligence, not generic advice.
 
 # RESPONSE FRAMEWORK (use these exact markdown headings)
 ## Situation Analysis

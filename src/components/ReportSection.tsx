@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { AIAnalysis, RecoveryPlans, RecoveryPlan } from "@/lib/types";
 import { Markdown } from "./Markdown";
+import { EngineTag, PoweredByEngine } from "./EngineBadge";
+import { ENGINES, BLUEPRINT, BRAND } from "@/lib/brand";
 
 function List({ title, items, tone }: { title: string; items: string[]; tone: string }) {
   return (
@@ -115,7 +117,10 @@ export function ReportSection({
     <div className="space-y-10">
       {/* Analysis */}
       <section className="space-y-5">
-        <h2 className="text-2xl font-bold text-slate-900">Your AI relationship analysis</h2>
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">{BRAND.reportTitle}</h2>
+          <PoweredByEngine className="mt-1.5" />
+        </div>
         <div className="rounded-2xl border border-slate-100 bg-white p-7 text-slate-700 shadow-sm">
           <Markdown>{analysis.summary}</Markdown>
         </div>
@@ -127,9 +132,13 @@ export function ReportSection({
         </div>
       </section>
 
-      {/* Recovery plans */}
+      {/* Recovery Blueprint */}
       <section className="space-y-5">
-        <h2 className="text-2xl font-bold text-slate-900">Your personalized recovery plan</h2>
+        <div>
+          <EngineTag name={ENGINES.recovery.name} className="mb-2" />
+          <h2 className="text-2xl font-bold text-slate-900">{BLUEPRINT.section}</h2>
+          <p className="mt-1 text-sm font-semibold text-brand-600">{BLUEPRINT.byHorizon[horizon]}</p>
+        </div>
         <div className="inline-flex rounded-full border border-slate-200 bg-white p-1">
           {([7, 30, 90] as const).map((h) => (
             <button

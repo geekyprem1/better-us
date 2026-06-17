@@ -28,8 +28,8 @@ export interface RecoveryResult {
 
 const STAGE_FACTOR: Record<Stage, number> = {
   Thriving: 1.0,
-  Stable: 0.9,
-  Disconnected: 0.6,
+  Healthy: 0.9,
+  "Needs Attention": 0.6,
   "Emotionally Distanced": 0.55,
   "At Risk": 0.4,
   "Collapse Risk": 0.25,

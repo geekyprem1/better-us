@@ -1,4 +1,6 @@
 import { RelationshipIntelligence } from "@/lib/engine";
+import { EngineTag, PoweredByEngine } from "./EngineBadge";
+import { ENGINES } from "@/lib/brand";
 
 function levelColor(level: string): string {
   switch (level) {
@@ -8,12 +10,9 @@ function levelColor(level: string): string {
     case "Thriving":
       return "#10b981";
     case "Moderate":
-    case "Stable":
     case "Healthy":
       return "#3366ff";
-    case "High ":
     case "Needs Attention":
-    case "Disconnected":
     case "Emotionally Distanced":
       return "#f59e0b";
     default:
@@ -38,22 +37,22 @@ export function IntelligencePanel({ intel }: { intel: RelationshipIntelligence }
 
   return (
     <section className="space-y-6">
-      <div className="flex items-center gap-3">
-        <h2 className="text-2xl font-bold text-slate-900">Relationship Intelligence</h2>
-        <span className="rounded-full bg-slate-900 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
-          Engine v{intel.version}
-        </span>
+      <div>
+        <h2 className="text-2xl font-bold text-slate-900">Relationship Intelligence™</h2>
+        <PoweredByEngine className="mt-1.5" />
       </div>
 
       {/* Hero: stage + recovery */}
       <div className="grid gap-5 md:grid-cols-2">
         <div className="rounded-3xl border border-slate-100 bg-gradient-to-br from-slate-900 to-slate-800 p-7 text-white shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Relationship stage</p>
-          <p className="mt-2 text-3xl font-extrabold">{stage.stage}</p>
+          <EngineTag name={ENGINES.stage.name} className="!border-white/15 !bg-white/10 !text-slate-300" />
+          <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Relationship stage</p>
+          <p className="mt-1 text-3xl font-extrabold">{stage.stage}</p>
           <p className="mt-3 text-sm leading-relaxed text-slate-300">{stage.rationale}</p>
         </div>
         <div className="rounded-3xl border border-brand-100 bg-white p-7 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Recovery potential</p>
+          <EngineTag name={ENGINES.recovery.name} />
+          <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Recovery potential</p>
           <div className="mt-2 flex items-end gap-2">
             <span className="text-4xl font-extrabold" style={{ color: levelColor(recovery.band) }}>
               {recovery.score}
@@ -101,6 +100,7 @@ export function IntelligencePanel({ intel }: { intel: RelationshipIntelligence }
       {/* Trust drivers */}
       {trustRisk.drivers.length > 0 && (
         <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+          <EngineTag name={ENGINES.trust.name} className="mb-3" />
           <h3 className="font-semibold text-slate-900">Why your trust risk is {trustRisk.level}</h3>
           <ul className="mt-3 space-y-2 text-sm leading-relaxed text-slate-600">
             {trustRisk.drivers.map((d, i) => (
@@ -115,7 +115,8 @@ export function IntelligencePanel({ intel }: { intel: RelationshipIntelligence }
 
       {/* Relationship DNA */}
       <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-        <h3 className="font-semibold text-slate-900">Your Relationship DNA</h3>
+        <EngineTag name={ENGINES.dna.name} className="mb-3" />
+        <h3 className="font-semibold text-slate-900">Your Relationship DNA™</h3>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { k: "Attachment", v: dna.attachmentStyle },

@@ -23,9 +23,13 @@ export const EVENTS = {
   ASSESSMENT_START: "assessment_start",
   ASSESSMENT_COMPLETE: "assessment_complete",
   UPGRADE_VIEW: "upgrade_view",
+  PAYWALL_VIEW: "paywall_view",
   UPGRADE_CLICK: "upgrade_click",
   SUBSCRIPTION_PURCHASE: "subscription_purchase",
   COACH_MESSAGE: "coach_message_sent",
+  PDF_DOWNLOAD: "pdf_download",
+  COUPLE_INVITE: "couple_invite_sent",
+  SHARE_RESULTS: "share_results",
 } as const;
 
 export function track(event: string, props?: Record<string, unknown>) {

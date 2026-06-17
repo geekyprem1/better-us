@@ -8,8 +8,8 @@ import { CommunicationResult } from "./communication";
 
 export type Stage =
   | "Thriving"
-  | "Stable"
-  | "Disconnected"
+  | "Healthy"
+  | "Needs Attention"
   | "Emotionally Distanced"
   | "At Risk"
   | "Collapse Risk";
@@ -25,8 +25,8 @@ const ORDER: Stage[] = [
   "Collapse Risk",
   "At Risk",
   "Emotionally Distanced",
-  "Disconnected",
-  "Stable",
+  "Needs Attention",
+  "Healthy",
   "Thriving",
 ];
 
@@ -55,14 +55,14 @@ export function runStage(
     rationale =
       "Trust may be intact, but emotional and physical closeness have faded — the warmth is missing.";
   } else if (n < 55 || overall < 68) {
-    stage = "Disconnected";
+    stage = "Needs Attention";
     rationale =
       "The basics are holding, but connection has thinned. You're coexisting more than truly engaging.";
   } else if (overall >= 85 && minCat >= 75) {
     stage = "Thriving";
     rationale = "All four pillars are strong and mutually reinforcing. This is a flourishing relationship.";
   } else {
-    stage = "Stable";
+    stage = "Healthy";
     rationale = "The relationship is fundamentally solid, with room to deepen in specific areas.";
   }
 
