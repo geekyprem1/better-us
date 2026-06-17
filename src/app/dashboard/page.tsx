@@ -12,10 +12,13 @@ import { AssessmentHistory } from "@/components/AssessmentHistory";
 import { RelationshipJourney } from "@/components/RelationshipJourney";
 import { TrendInsights } from "@/components/TrendInsights";
 import { Milestones } from "@/components/Milestones";
+import { RelationshipSnapshot } from "@/components/RelationshipSnapshot";
+import { DownloadPdfButton } from "@/components/DownloadPdfButton";
 import { ScoreResult, bandFor, CategoryScore } from "@/lib/scoring";
 import { CATEGORIES } from "@/lib/questions";
 import { HistoryItem } from "@/lib/history";
 import { RelationshipIntelligence, runTrends, runMilestones, TrendPoint } from "@/lib/engine";
+import { coachSnapshot } from "@/lib/engine/context";
 
 export const metadata = { title: "Dashboard — BetterUs" };
 
@@ -87,6 +90,7 @@ export default async function DashboardPage() {
   const latestIntel = intelByAssessment.get(latest.assessment_id)?.data as
     | RelationshipIntelligence
     | undefined;
+  const snapshot = latestIntel ? coachSnapshot(latestIntel) : null;
 
   // Build journey (newest first) + trend inputs (chronological).
   const historyItems: HistoryItem[] = [...scoreRows].reverse().map((r) => {
@@ -144,7 +148,7 @@ export default async function DashboardPage() {
               href="/coach"
               className="rounded-full bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
             >
-              BetterUs Coach™
+              Get Personalized Coaching →
             </Link>
           </div>
         </div>
@@ -153,8 +157,31 @@ export default async function DashboardPage() {
         <OverallScore scores={scores} />
         <CategoryCards scores={scores} />
 
+        {/* Relationship Snapshot™ */}
+        {snapshot && <RelationshipSnapshot snapshot={snapshot} />}
+
         {/* 2. Relationship Intelligence™ */}
         {latestIntel && <IntelligencePanel intel={latestIntel} />}
+
+        {/* PDF Intelligence Report™ */}
+        <div className="flex flex-col items-start justify-between gap-4 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm sm:flex-row sm:items-center">
+          <div>
+            <h2 className="font-semibold text-slate-900">PDF Intelligence Report™</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Your full 12-page report — scores, AI analysis, Relationship DNA™ & Recovery Blueprint™.
+            </p>
+          </div>
+          {premium ? (
+            <DownloadPdfButton assessmentId={latest.assessment_id} />
+          ) : (
+            <Link
+              href="/pricing"
+              className="rounded-full bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
+            >
+              Download 12-Page Report 🔒
+            </Link>
+          )}
+        </div>
 
         {/* 3. Progress Graph */}
         <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
@@ -174,6 +201,16 @@ export default async function DashboardPage() {
             <p className="mt-4 text-sm text-slate-500">Retake the assessment to chart your progress.</p>
           )}
         </div>
+
+        {/* Couple Sync™ (moved up — conversion feature) */}
+        {premium ? (
+          <InviteCouple />
+        ) : (
+          <LockedFeature
+            title="Couple Sync™"
+            blurb="Invite your partner to compare Trust, Communication, Connection & Intimacy — and see your perception gaps."
+          />
+        )}
 
         {/* 4. Emotional Drift Engine™ */}
         {premium ? (
@@ -199,10 +236,7 @@ export default async function DashboardPage() {
           />
         )}
 
-        {/* 8. Couple Mode™ */}
-        {premium && <InviteCouple />}
-
-        {/* 9. BetterUs Coach™ */}
+        {/* BetterUs Coach™ */}
         <Link
           href="/coach"
           className="block rounded-3xl border border-slate-100 bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-sm transition hover:from-slate-800"

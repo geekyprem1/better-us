@@ -2,7 +2,8 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { createClient } from "@/lib/supabase/server";
 import { isPremium } from "@/lib/entitlements";
 import { ReportDocument } from "@/lib/pdf/ReportDocument";
-import { RelationshipIntelligence } from "@/lib/engine";
+import { RelationshipIntelligence, runTrends, TrendPoint } from "@/lib/engine";
+import { recoveryForecast } from "@/lib/engine/context";
 import { AIAnalysis, RecoveryPlans } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -42,11 +43,29 @@ export async function GET(request: Request) {
   const intel = intelRow?.data as RelationshipIntelligence | undefined;
   if (!intel) return new Response("no_intelligence", { status: 404 });
 
+  // Full score history → journey + trends.
+  const { data: scoreRows } = await supabase
+    .from("scores")
+    .select("trust, communication, connection, intimacy, overall, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: true });
+  const history: TrendPoint[] = (scoreRows || []).map((r) => ({
+    date: r.created_at,
+    overall: r.overall,
+    trust: r.trust,
+    communication: r.communication,
+    connection: r.connection,
+    intimacy: r.intimacy,
+  }));
+
   const doc = ReportDocument({
     name: profile?.full_name || undefined,
     intel,
     analysis: report?.analysis as AIAnalysis | undefined,
     plans: report?.plans as RecoveryPlans | undefined,
+    history,
+    trends: runTrends(history),
+    forecast: recoveryForecast(intel),
     date: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }),
   });
   const buffer = await renderToBuffer(doc);

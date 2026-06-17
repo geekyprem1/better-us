@@ -84,6 +84,35 @@ export function recoveryJourney(intel: RelationshipIntelligence): RecoveryJourne
   return { currentStage: current, nextStage, progress, recovery: intel.recovery.score, needs };
 }
 
+// RECOVERY FORECAST™ — deterministic stage projection with vs. without action.
+// Ladder is best → worst for projection math.
+const FORECAST_LADDER = [
+  "Thriving",
+  "Healthy",
+  "Needs Attention",
+  "At Risk",
+  "Emotionally Distanced",
+  "Collapse Risk",
+];
+
+export interface RecoveryForecast {
+  withoutAction: { d30: string; d60: string; d90: string };
+  withAction: { d30: string; d60: string; d90: string };
+}
+
+export function recoveryForecast(intel: RelationshipIntelligence): RecoveryForecast {
+  const found = FORECAST_LADDER.indexOf(intel.stage.stage);
+  const i = found < 0 ? 3 : found;
+  const at = (n: number) => FORECAST_LADDER[Math.max(0, Math.min(FORECAST_LADDER.length - 1, n))];
+  // High recovery potential softens the decline / accelerates the gains.
+  const fast = intel.recovery.score >= 60;
+  return {
+    withoutAction: { d30: at(i + (fast ? 0 : 1)), d60: at(i + 1), d90: at(i + 2) },
+    // Never project below "Healthy" (index 1) so we don't over-promise Thriving.
+    withAction: { d30: at(Math.max(1, i - 1)), d60: at(Math.max(1, i - 2)), d90: at(Math.max(1, i - 3)) },
+  };
+}
+
 export function criticalInsights(intel: RelationshipIntelligence): CriticalInsight[] {
   const { health, trustRisk, communication, stage } = intel;
   const out: CriticalInsight[] = [];

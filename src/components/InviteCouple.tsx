@@ -39,7 +39,7 @@ export function InviteCouple() {
       <div className="flex items-start gap-3">
         <div className="text-2xl">💞</div>
         <div className="flex-1">
-          <h2 className="font-semibold text-slate-900">Couple Mode</h2>
+          <h2 className="font-semibold text-slate-900">Couple Sync™</h2>
           <p className="mt-1 text-sm text-slate-600">
             Invite your partner to take the assessment. See exactly where your views align — and
             where the perception gaps are.
