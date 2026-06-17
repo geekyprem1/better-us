@@ -1,8 +1,11 @@
-import { Document, Page, Text, View, StyleSheet, Svg, Polygon, Line, Circle } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Svg, Polygon, Line, Circle, Font } from "@react-pdf/renderer";
 import { RelationshipIntelligence, TrendPoint, TrendResult } from "@/lib/engine";
 import { relationshipHeadline, RecoveryForecast } from "@/lib/engine/context";
 import { AIAnalysis, RecoveryPlans } from "@/lib/types";
 import { BRAND, BLUEPRINT } from "@/lib/brand";
+
+// Prevent mid-word hyphenation (e.g. "Intel-ligence") — wrap whole words.
+Font.registerHyphenationCallback((word) => [word]);
 
 const BLUE = "#1f49f5";
 const DARK = "#0f172a";
@@ -24,11 +27,11 @@ const s = StyleSheet.create({
   p: { marginBottom: 8, color: INK },
   mute: { color: MUTE },
   // cover
-  cover: { flex: 1, justifyContent: "center", paddingHorizontal: 48 },
+  cover: { paddingTop: 130, paddingHorizontal: 48 },
   coverBrand: { fontSize: 16, fontFamily: "Helvetica-Bold", color: BLUE, marginBottom: 10 },
-  coverTitle: { fontSize: 32, fontFamily: "Helvetica-Bold", color: DARK, marginBottom: 8, lineHeight: 1.15 },
-  coverSub: { fontSize: 11, color: MUTE, marginBottom: 28 },
-  coverScore: { fontSize: 72, fontFamily: "Helvetica-Bold", color: BLUE },
+  coverTitle: { fontSize: 30, fontFamily: "Helvetica-Bold", color: DARK, marginBottom: 8, lineHeight: 1.15 },
+  coverSub: { fontSize: 11, color: MUTE, marginBottom: 36 },
+  coverScore: { fontSize: 60, fontFamily: "Helvetica-Bold", color: BLUE, lineHeight: 1, marginBottom: 28 },
   // chips / cards
   chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 },
   chip: { borderWidth: 1, borderColor: LINE, borderRadius: 8, paddingVertical: 8, paddingHorizontal: 12, minWidth: 120 },
@@ -471,7 +474,7 @@ export function ReportDocument(d: ReportPdfData) {
           <Text style={[s.p, s.mute]}>{plans.sevenDay.focus}</Text>
           {plans.sevenDay.days.map((day) => (
             <View style={s.dayCard} key={day.day} wrap={false}>
-              <Text style={s.h3}>Day {day.day}: {day.title}</Text>
+              <Text style={s.h3}>{day.title.startsWith("Week") ? day.title : `Day ${day.day}: ${day.title}`}</Text>
               <Text style={s.daySub}><Text style={s.dayKey}>Action: </Text>{day.dailyAction}</Text>
               <Text style={s.daySub}><Text style={s.dayKey}>Conversation: </Text>{day.conversationExercise}</Text>
               <Text style={s.daySub}><Text style={s.dayKey}>Reflection: </Text>{day.reflection}</Text>
@@ -482,26 +485,45 @@ export function ReportDocument(d: ReportPdfData) {
         </Page>
       )}
 
-      {/* PAGE 14 — LOCKED PREMIUM PREVIEW™ */}
-      <Page size="A4" style={s.page}>
-        <Text style={s.kicker}>Unlock more</Text>
-        <Text style={s.h1}>Premium Preview™</Text>
-        {[
-          ["30-Day Reconnection Blueprint™", "A full month of guided daily actions to rebuild momentum."],
-          ["90-Day Relationship Recovery Blueprint™", "The complete recovery system across three months."],
-          ["Couple Sync Report™", "Compare both partners' assessments and reveal perception gaps."],
-          ["Relationship Vault™", "Save every insight, script, and breakthrough — never lose progress."],
-          ["Advanced Coaching™", "Priority access to BetterUs Coach™ with deeper sessions."],
-        ].map(([t, sub]) => (
-          <View key={t} style={s.locked}>
-            <Text style={[s.h3, { color: MUTE }]}>🔒 {t}</Text>
-            <Text style={s.daySub}>{sub}</Text>
-          </View>
-        ))}
-        <Footer />
-      </Page>
+      {/* PAGE 14 — 30-DAY RECONNECTION BLUEPRINT™ (premium) */}
+      {plans?.thirtyDay?.days?.length ? (
+        <Page size="A4" style={s.page}>
+          <Text style={s.kicker}>Personalized Recovery Blueprint™</Text>
+          <Text style={s.h1}>{BLUEPRINT.byHorizon[30]}</Text>
+          <Text style={[s.p, s.mute]}>{plans.thirtyDay.focus}</Text>
+          {plans.thirtyDay.days.map((day) => (
+            <View style={s.dayCard} key={day.day} wrap={false}>
+              <Text style={s.h3}>{day.title.startsWith("Week") ? day.title : `Day ${day.day}: ${day.title}`}</Text>
+              <Text style={s.daySub}><Text style={s.dayKey}>Action: </Text>{day.dailyAction}</Text>
+              <Text style={s.daySub}><Text style={s.dayKey}>Conversation: </Text>{day.conversationExercise}</Text>
+              <Text style={s.daySub}><Text style={s.dayKey}>Reflection: </Text>{day.reflection}</Text>
+              <Text style={s.daySub}><Text style={s.dayKey}>Goal: </Text>{day.trustActivity}</Text>
+            </View>
+          ))}
+          <Footer />
+        </Page>
+      ) : null}
 
-      {/* PAGE 15 — CONVERSION PAGE™ */}
+      {/* PAGE 15 — 90-DAY RECOVERY BLUEPRINT™ (premium) */}
+      {plans?.ninetyDay?.days?.length ? (
+        <Page size="A4" style={s.page}>
+          <Text style={s.kicker}>Personalized Recovery Blueprint™</Text>
+          <Text style={s.h1}>{BLUEPRINT.byHorizon[90]}</Text>
+          <Text style={[s.p, s.mute]}>{plans.ninetyDay.focus}</Text>
+          {plans.ninetyDay.days.map((day) => (
+            <View style={s.dayCard} key={day.day} wrap={false}>
+              <Text style={s.h3}>{day.title.startsWith("Week") ? day.title : `Day ${day.day}: ${day.title}`}</Text>
+              <Text style={s.daySub}><Text style={s.dayKey}>Action: </Text>{day.dailyAction}</Text>
+              <Text style={s.daySub}><Text style={s.dayKey}>Conversation: </Text>{day.conversationExercise}</Text>
+              <Text style={s.daySub}><Text style={s.dayKey}>Reflection: </Text>{day.reflection}</Text>
+              <Text style={s.daySub}><Text style={s.dayKey}>Goal: </Text>{day.trustActivity}</Text>
+            </View>
+          ))}
+          <Footer />
+        </Page>
+      ) : null}
+
+      {/* FINAL — YOUR NEXT BEST MOVE™ (premium: no upsell) */}
       <Page size="A4" style={s.page}>
         <Text style={s.kicker}>Your Next Best Move™</Text>
         <Text style={s.h1}>Where you go from here</Text>
@@ -522,17 +544,18 @@ export function ReportDocument(d: ReportPdfData) {
           <Text style={s.h3}>Recommended next steps</Text>
           <List
             items={[
-              "Complete your Recovery Blueprint™ — one day at a time.",
-              "Use BetterUs Coach™ for scripts and in-the-moment guidance.",
-              "Invite your partner with Couple Sync™.",
-              "Re-assess in 2–4 weeks to track Relationship Momentum™.",
+              "Start Day 1 of your Recovery Blueprint™ today — one action at a time.",
+              "Open BetterUs Coach™ for scripts and in-the-moment guidance.",
+              "Invite your partner with Couple Sync™ to compare perspectives.",
+              "Re-assess in 2–4 weeks to track your Relationship Momentum™.",
             ]}
           />
         </View>
         <View style={[s.card, { backgroundColor: "#eef4ff", borderColor: "#bcd3ff", alignItems: "center", paddingVertical: 18 }]}>
-          <Text style={{ fontSize: 16, fontFamily: "Helvetica-Bold", color: DARK }}>Unlock Premium</Text>
-          <Text style={{ fontSize: 22, fontFamily: "Helvetica-Bold", color: BLUE, marginVertical: 4 }}>₹499 / month</Text>
-          <Text style={s.mute}>Start your recovery today at betterus.life</Text>
+          <Text style={{ fontSize: 15, fontFamily: "Helvetica-Bold", color: DARK }}>You have everything you need to start.</Text>
+          <Text style={[s.mute, { marginTop: 4, textAlign: "center" }]}>
+            Recovery is built one small, consistent action at a time. Continue your journey at betterus.life
+          </Text>
         </View>
         <Footer />
       </Page>

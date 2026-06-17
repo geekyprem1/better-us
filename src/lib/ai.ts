@@ -71,13 +71,14 @@ export async function generatePlan(
   scores: ScoreResult,
   analysis: AIAnalysis,
 ): Promise<RecoveryPlan> {
-  // For 30/90-day plans we generate representative milestone days to stay token-efficient.
+  // 7 & 30-day are fully day-by-day; 90-day uses weekly checkpoints so the plan
+  // feels complete without 90 separate entries. Keep each field to one sentence.
   const dayInstruction =
     horizon === 7
-      ? "Provide all 7 days (day 1 through 7)."
+      ? "Provide ALL 7 days (day 1 through day 7), each distinct."
       : horizon === 30
-        ? "Provide 8 milestone days: 1, 3, 7, 10, 14, 18, 24, 30."
-        : "Provide 8 milestone days: 1, 7, 14, 30, 45, 60, 75, 90.";
+        ? "Provide ALL 30 days (day 1 through day 30), each distinct and progressive. Keep every field to ONE short sentence."
+        : "Provide 13 weekly checkpoints covering the full 90 days. Set `day` to the starting day of each week (1, 8, 15, 22, 29, 36, 43, 50, 57, 64, 71, 78, 85) and make `title` 'Week N: <theme>'. Keep every field to ONE short sentence.";
 
   const completion = await getOpenAI().chat.completions.create({
     model: OPENAI_MODEL,
