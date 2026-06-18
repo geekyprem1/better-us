@@ -1,6 +1,5 @@
-// Pricing tiers (Phase 12). Monthly tiers are Razorpay *subscriptions*;
-// lifetime is a one-time *order*. Plan ids come from env so they can be
-// swapped without code changes.
+// Pricing tiers. Checkout is handled by Dodo Payments (Merchant of Record);
+// each tier maps to a Dodo product id via env (see lib/dodo.ts).
 
 export type TierId = "pro" | "premium" | "lifetime";
 export type BillingKind = "subscription" | "one_time";
@@ -15,8 +14,6 @@ export interface Tier {
   highlight?: boolean;
   tagline: string;
   features: string[];
-  // env var holding the Razorpay plan id (subscriptions only)
-  planEnv?: "RAZORPAY_PLAN_PRO" | "RAZORPAY_PLAN_PREMIUM";
 }
 
 export const TIERS: Tier[] = [
@@ -27,7 +24,6 @@ export const TIERS: Tier[] = [
     period: "/month",
     kind: "subscription",
     tagline: "Everything you need to start healing.",
-    planEnv: "RAZORPAY_PLAN_PRO",
     features: [
       "Full AI Relationship Analysis",
       "7-Day Recovery Blueprint™",
@@ -45,7 +41,6 @@ export const TIERS: Tier[] = [
     badge: "MOST POPULAR",
     highlight: true,
     tagline: "The complete recovery system + AI coach.",
-    planEnv: "RAZORPAY_PLAN_PREMIUM",
     features: [
       "Everything in Pro",
       "7 / 30 / 90-Day Recovery Blueprints™",

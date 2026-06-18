@@ -23,11 +23,12 @@ export async function getUserTier(userId: string): Promise<Tier> {
   if (!data) return "free";
   if (data.current_period_end && new Date(data.current_period_end) < new Date()) return "free";
 
-  const planId = data.plan_id || "";
-  if (planId === process.env.RAZORPAY_PLAN_PRO) return "pro";
-  if (planId === process.env.RAZORPAY_PLAN_PREMIUM) return "premium";
+  // Dodo webhook stores plan_id as the tier name ('pro' | 'premium' | 'lifetime').
+  const planId = (data.plan_id || "").toLowerCase();
+  if (planId === "pro") return "pro";
+  if (planId === "premium") return "premium";
   if (planId === "lifetime") return "premium";
-  // Any other active subscription (e.g. manual grant, legacy plan) → premium.
+  // Any other active subscription (e.g. manual grant) → premium.
   return "premium";
 }
 

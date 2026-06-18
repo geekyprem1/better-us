@@ -15,8 +15,6 @@
     "next": "^16.2.9",
     "openai": "^4.77.0",
     "posthog-js": "^1.205.0",
-    "posthog-node": "^4.3.2",
-    "razorpay": "^2.9.5",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-markdown": "^10.1.0",

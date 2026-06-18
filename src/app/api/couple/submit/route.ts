@@ -3,11 +3,17 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { computeScores, isComplete, Answers } from "@/lib/scoring";
 import { runCoupleSync } from "@/lib/engine";
 import { generateCoupleExplanation } from "@/lib/ai";
+import { rateLimit, clientIp } from "@/lib/ratelimit";
 
 export const maxDuration = 60;
 
 // Partner B submits their assessment (no login required — the token authorizes).
 export async function POST(request: Request) {
+  // Throttle by IP to stop token brute-forcing / AI cost abuse.
+  if (!(await rateLimit(`couple:${clientIp(request)}`, 8, 3600))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
+
   let body: { token?: string; answers?: Answers; partnerName?: string };
   try {
     body = await request.json();
@@ -61,6 +67,9 @@ export async function POST(request: Request) {
     })
     .eq("token", token);
 
-  if (error) return NextResponse.json({ error: "db", detail: error.message }, { status: 500 });
+  if (error) {
+    console.error("couple submit failed", error);
+    return NextResponse.json({ error: "server_error" }, { status: 500 });
+  }
   return NextResponse.json({ ok: true });
 }

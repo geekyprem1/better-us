@@ -36,7 +36,8 @@ export async function POST(request: Request) {
     .single();
 
   if (aErr || !assessment) {
-    return NextResponse.json({ error: "db_assessment", detail: aErr?.message }, { status: 500 });
+    console.error("assessment insert failed", aErr);
+    return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
 
   // 2. Insert all answers.
@@ -48,7 +49,8 @@ export async function POST(request: Request) {
   }));
   const { error: ansErr } = await supabase.from("assessment_answers").insert(answerRows);
   if (ansErr) {
-    return NextResponse.json({ error: "db_answers", detail: ansErr.message }, { status: 500 });
+    console.error("answers insert failed", ansErr);
+    return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
 
   // 3. Compute and store scores.
@@ -63,7 +65,8 @@ export async function POST(request: Request) {
     overall: scores.overall,
   });
   if (sErr) {
-    return NextResponse.json({ error: "db_scores", detail: sErr.message }, { status: 500 });
+    console.error("scores insert failed", sErr);
+    return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
 
   // 4. Run the deterministic Relationship Intelligence Engine and store it.

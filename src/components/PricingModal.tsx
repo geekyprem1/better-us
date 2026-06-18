@@ -107,7 +107,7 @@ export function PricingModal({
 
         {error && <p className="mt-5 text-center text-sm text-red-600">{error}</p>}
         <p className="mt-6 text-center text-xs text-slate-400">
-          Secure payment via Razorpay · Cancel monthly plans anytime · Prices in INR
+          Secure global payment via Dodo Payments · Cancel monthly plans anytime
         </p>
       </div>
     </div>

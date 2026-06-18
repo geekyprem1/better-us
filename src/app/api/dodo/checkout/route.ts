@@ -37,9 +37,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ checkout_url: checkout.checkout_url });
   } catch (e) {
-    return NextResponse.json(
-      { error: "checkout_failed", detail: e instanceof Error ? e.message : "unknown" },
-      { status: 500 },
-    );
+    console.error("dodo checkout failed", e);
+    return NextResponse.json({ error: "checkout_failed" }, { status: 502 });
   }
 }

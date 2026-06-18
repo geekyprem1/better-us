@@ -5,11 +5,11 @@ import { coachRespond } from "@/lib/ai";
 import { engineCoachContext } from "@/lib/engine/context";
 import { RelationshipIntelligence } from "@/lib/engine";
 import { CoachMessage } from "@/lib/types";
+import { rateLimit } from "@/lib/ratelimit";
 
 export const maxDuration = 60;
 
-// Coach OS turn: takes recent messages, returns typed cards, and persists
-// the session + cards so the workspace panels can surface them.
+// Coach OS turn: typed cards, persisted, with hard cost controls.
 export async function POST(request: Request) {
   const supabase = await createClient();
   const {
@@ -17,15 +17,36 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  // Enforce coach economics: block when the tier's quota is exhausted.
-  const usage = await getCoachUsage(user.id);
-  if (usage.remaining <= 0) {
-    return NextResponse.json({ error: "limit_reached", usage }, { status: 403 });
+  // Burst limiter (defence-in-depth against rapid concurrency).
+  if (!(await rateLimit(`coach:${user.id}`, 5, 60))) {
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const { messages } = (await request.json()) as { messages: CoachMessage[] };
-  const lastUser = [...messages].reverse().find((m) => m.role === "user");
+  const { messages } = (await request.json().catch(() => ({}))) as { messages?: CoachMessage[] };
+  const lastUser = [...(messages || [])].reverse().find((m) => m.role === "user");
   if (!lastUser) return NextResponse.json({ error: "no_message" }, { status: 400 });
+
+  // ── Reserve the session BEFORE the AI call, then verify quota ──
+  // This closes the TOCTOU race: concurrent requests all insert first and
+  // then count, so only `limit` of them survive.
+  const { data: session, error: reserveErr } = await supabase
+    .from("coach_sessions")
+    .insert({ user_id: user.id, prompt: lastUser.content })
+    .select("id, prompt, created_at")
+    .single();
+  if (reserveErr || !session) {
+    console.error("coach reserve failed", reserveErr);
+    return NextResponse.json({ error: "server_error" }, { status: 500 });
+  }
+
+  const usage = await getCoachUsage(user.id); // count now includes this reservation
+  if (usage.used > usage.limit) {
+    await supabase.from("coach_sessions").delete().eq("id", session.id);
+    return NextResponse.json(
+      { error: "limit_reached", usage: { ...usage, remaining: 0 } },
+      { status: 403 },
+    );
+  }
 
   // Ground in the latest engine output.
   let engineInput: string | undefined;
@@ -39,26 +60,18 @@ export async function POST(request: Request) {
   const intel = intelRow?.data as RelationshipIntelligence | undefined;
   if (intel) engineInput = engineCoachContext(intel).input;
 
-  // Generate the structured response.
   let response;
   try {
-    response = await coachRespond(messages, engineInput);
+    response = await coachRespond(messages || [], engineInput);
   } catch (e) {
-    return NextResponse.json(
-      { error: "ai_failed", detail: e instanceof Error ? e.message : "unknown" },
-      { status: 500 },
-    );
+    // Don't penalize the user for our failure — release the reservation.
+    await supabase.from("coach_sessions").delete().eq("id", session.id);
+    console.error("coach AI failed", e);
+    return NextResponse.json({ error: "ai_unavailable" }, { status: 502 });
   }
 
-  // Persist the session + its cards.
-  const { data: session } = await supabase
-    .from("coach_sessions")
-    .insert({ user_id: user.id, prompt: lastUser.content })
-    .select("id, prompt, created_at")
-    .single();
-
   let stored = response.cards;
-  if (session && response.cards.length) {
+  if (response.cards.length) {
     const { data: rows } = await supabase
       .from("coach_cards")
       .insert(
@@ -75,7 +88,6 @@ export async function POST(request: Request) {
   }
 
   const updatedUsage = await getCoachUsage(user.id);
-
   return NextResponse.json({
     session,
     cards: stored,

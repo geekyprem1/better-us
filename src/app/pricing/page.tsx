@@ -30,7 +30,7 @@ export default async function PricingPage() {
       <section className="mx-auto -mt-6 max-w-5xl px-4 pb-20 sm:px-6">
         <PricingTiers isLoggedIn={!!user} premium={premium} />
         <p className="mt-8 text-center text-xs text-slate-400">
-          Payments processed securely by Razorpay. Monthly plans cancel anytime. Prices in INR.
+          Payments processed securely by Dodo Payments. Monthly plans cancel anytime.
         </p>
       </section>
       <Footer />
