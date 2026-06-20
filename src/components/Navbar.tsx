@@ -2,8 +2,10 @@ import Link from "next/link";
 import { getOptionalUser } from "@/lib/supabase/server";
 import { LogoutButton } from "./LogoutButton";
 
-export async function Navbar() {
-  const user = await getOptionalUser();
+// Pass `user` from the page to avoid a duplicate auth round-trip; if omitted,
+// the navbar resolves it itself (used on public pages).
+export async function Navbar({ user: providedUser }: { user?: { id: string } | null } = {}) {
+  const user = providedUser !== undefined ? providedUser : await getOptionalUser();
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-100 bg-white/80 backdrop-blur">

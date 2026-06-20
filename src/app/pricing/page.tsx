@@ -15,7 +15,7 @@ export default async function PricingPage() {
   return (
     <main className="min-h-screen bg-white">
       <TrackOnMount event={EVENTS.UPGRADE_VIEW} props={{ source: "pricing_page" }} />
-      <Navbar />
+      <Navbar user={user} />
       <section className="bg-aurora">
         <div className="mx-auto max-w-5xl px-4 py-16 text-center sm:px-6">
           <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient, getOptionalUser } from "@/lib/supabase/server";
-import { getCoachUsage, isPremium } from "@/lib/entitlements";
+import { getCoachUsage } from "@/lib/entitlements";
 import { Navbar } from "@/components/Navbar";
 import { CoachWorkspace } from "@/components/CoachWorkspace";
 import { StoredCoachCard, CoachSession } from "@/lib/types";
@@ -15,26 +15,39 @@ export default async function CoachPage() {
   if (!user) redirect("/login?redirect=/coach");
   const supabase = await createClient();
 
-  // Coach is open to everyone, gated by per-tier usage (free = 3 lifetime).
-  const usage = await getCoachUsage(user.id);
-  const premium = await isPremium(user.id);
+  // All independent reads in parallel (avoids a sequential waterfall).
+  const [usage, { data: intelRow }, { data: scoreRows }, { data: sessions }, { data: cards }] =
+    await Promise.all([
+      getCoachUsage(user.id),
+      supabase
+        .from("relationship_intelligence")
+        .select("data")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("scores")
+        .select("trust, communication, connection, intimacy, overall, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("coach_sessions")
+        .select("id, prompt, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20),
+      supabase
+        .from("coach_cards")
+        .select("id, type, title, body, status, session_id, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(200),
+    ]);
 
-  // Latest engine profile (for snapshot / journey / critical insights).
-  const { data: intelRow } = await supabase
-    .from("relationship_intelligence")
-    .select("data")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  // Derive premium from usage tier (no extra query).
+  const premium = usage.tier !== "free";
   const intel = intelRow?.data as RelationshipIntelligence | undefined;
-
-  // Score history for milestones.
-  const { data: scoreRows } = await supabase
-    .from("scores")
-    .select("trust, communication, connection, intimacy, overall, created_at")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true });
   const trendPoints: TrendPoint[] = (scoreRows || []).map((r) => ({
     date: r.created_at,
     overall: r.overall,
@@ -49,22 +62,6 @@ export default async function CoachPage() {
   const critical = intel ? criticalInsights(intel) : [];
   const milestones = runMilestones(trendPoints);
 
-  // Load workspace data.
-  const [{ data: sessions }, { data: cards }] = await Promise.all([
-    supabase
-      .from("coach_sessions")
-      .select("id, prompt, created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(20),
-    supabase
-      .from("coach_cards")
-      .select("id, type, title, body, status, session_id, created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(200),
-  ]);
-
   const allCards = (cards || []) as StoredCoachCard[];
   const sessionList = (sessions || []) as CoachSession[];
   const latestSessionId = sessionList[0]?.id;
@@ -74,7 +71,7 @@ export default async function CoachPage() {
 
   return (
     <main className="flex min-h-screen flex-col bg-soft">
-      <Navbar />
+      <Navbar user={user} />
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 pb-10 pt-6 sm:px-6">
         <div className="mb-5">
           <h1 className="text-2xl font-bold text-slate-900">BetterUs Coach™</h1>

@@ -39,18 +39,24 @@ export default async function DashboardPage() {
   if (!user) redirect("/login?redirect=/dashboard");
   const supabase = await createClient();
 
-  const { data: scoreRows } = await supabase
-    .from("scores")
-    .select("trust, communication, connection, intimacy, overall, created_at, assessment_id")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true });
-
-  const premium = await isPremium(user.id);
+  // Run independent queries in parallel (avoids a slow sequential waterfall).
+  const [premium, { data: scoreRows }, { data: intelRows }] = await Promise.all([
+    isPremium(user.id),
+    supabase
+      .from("scores")
+      .select("trust, communication, connection, intimacy, overall, created_at, assessment_id")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("relationship_intelligence")
+      .select("assessment_id, relationship_stage, recovery_score, data")
+      .eq("user_id", user.id),
+  ]);
 
   if (!scoreRows || scoreRows.length === 0) {
     return (
       <main className="min-h-screen bg-soft">
-        <Navbar />
+        <Navbar user={user} />
         <div className="mx-auto max-w-3xl px-4 py-24 text-center sm:px-6">
           <h1 className="text-3xl font-bold text-slate-900">Welcome to BetterUs</h1>
           <p className="mt-3 text-slate-600">
@@ -67,11 +73,6 @@ export default async function DashboardPage() {
     );
   }
 
-  // Intelligence rows (stage + recovery per assessment, + full latest profile).
-  const { data: intelRows } = await supabase
-    .from("relationship_intelligence")
-    .select("assessment_id, relationship_stage, recovery_score, data")
-    .eq("user_id", user.id);
   const intelByAssessment = new Map((intelRows || []).map((r) => [r.assessment_id, r]));
 
   const latest = scoreRows[scoreRows.length - 1];
@@ -128,7 +129,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-soft">
-      <Navbar />
+      <Navbar user={user} />
       <div className="mx-auto max-w-5xl space-y-8 px-4 pb-20 pt-8 sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
