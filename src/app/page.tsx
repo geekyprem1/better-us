@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { FAQ } from "@/components/FAQ";
+import { HeroHearts } from "@/components/HeroHearts";
 import { TrackOnMount } from "@/components/TrackOnMount";
 import { EVENTS } from "@/lib/analytics";
 
@@ -67,8 +68,9 @@ export default function LandingPage() {
       <Navbar />
 
       {/* Hero */}
-      <section className="bg-aurora">
-        <div className="mx-auto max-w-6xl px-4 py-20 text-center sm:px-6 sm:py-28">
+      <section className="relative overflow-hidden bg-aurora">
+        <HeroHearts />
+        <div className="relative mx-auto max-w-6xl px-4 py-20 text-center sm:px-6 sm:py-28">
           <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-4 py-1.5 text-sm font-medium text-brand-700 animate-fade-up">
             ◆ The Relationship Operating System for Modern Couples
           </div>
