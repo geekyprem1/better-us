@@ -1,22 +1,25 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-50: #eef4ff;
-  --color-brand-100: #d9e6ff;
-  --color-brand-200: #bcd3ff;
-  --color-brand-300: #8eb6ff;
-  --color-brand-400: #598dff;
-  --color-brand-500: #3366ff;
-  --color-brand-600: #1f49f5;
-  --color-brand-700: #1837e1;
-  --color-brand-800: #1a30b6;
-  --color-brand-900: #1c2f8f;
+  /* Brand — a deeper, less-neon indigo than the default SaaS blue */
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-300: #a5b4fc;
+  --color-brand-400: #7c89f5;
+  --color-brand-500: #4f5bd5;
+  --color-brand-600: #3a3fb5;
+  --color-brand-700: #2f3494;
+  --color-brand-800: #2a2c77;
+  --color-brand-900: #262a63;
 
-  --color-accent-400: #f97393;
-  --color-accent-500: #f4567c;
-  --color-accent-600: #e23a64;
+  /* Warm rose accent — emotional, human */
+  --color-accent-400: #f0846a;
+  --color-accent-500: #e26a4f;
+  --color-accent-600: #c8543c;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Fraunces", "Georgia", ui-serif, serif;
 
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
@@ -31,21 +34,29 @@ html {
 }
 
 body {
-  background: #ffffff;
-  color: #0f172a;
+  background: #faf7f2; /* warm cream, not stark white */
+  color: #1c1b1a;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Subtle premium gradient backdrop used across hero/section surfaces */
+/* Editorial serif headings — the biggest signal that this isn't a template */
+h1,
+h2 {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+  font-optical-sizing: auto;
+}
+
+/* Warm, restrained backdrop (no neon corner blobs) */
 .bg-aurora {
   background:
-    radial-gradient(60% 50% at 15% 0%, rgba(51, 102, 255, 0.10) 0%, rgba(255, 255, 255, 0) 60%),
-    radial-gradient(50% 45% at 90% 10%, rgba(244, 86, 124, 0.10) 0%, rgba(255, 255, 255, 0) 55%),
-    #ffffff;
+    radial-gradient(70% 55% at 12% -5%, rgba(79, 91, 213, 0.08) 0%, rgba(250, 247, 242, 0) 60%),
+    radial-gradient(55% 50% at 92% 8%, rgba(226, 106, 79, 0.08) 0%, rgba(250, 247, 242, 0) 55%),
+    #faf7f2;
 }
 
 .bg-soft {
-  background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
+  background: linear-gradient(180deg, #faf7f2 0%, #f4efe7 100%);
 }
 
 @keyframes fade-up {
